@@ -233,25 +233,25 @@
                         localStorage.setItem("bsky-followers", JSON.stringify(followers))
                     }).catch(err => console.log(err));
                     setInterval(() => {
-                        if(window.location.pathname === "/notifications") {
-                            getFollowers(pdsUrl, accessJwt, did, 100).then((followers) => {
-                                try {
-                                    let unfollowers = JSON.parse(localStorage.getItem("bsky-followers")).filter(element => !followers.some(item => item.did === element.did))
-                                    if(unfollowers.length != JSON.parse(localStorage.getItem("bsky-followers")).length) {
-                                        if(unfollowers.length > 1) {
-                                            localStorage.setItem("bsky-unfollows", JSON.stringify(unfollowers));
-                                        } else localStorage.removeItem('bsky-unfollows');
+                        getFollowers(pdsUrl, accessJwt, did, 100).then((followers) => {
+                            try {
+                                let unfollowers = JSON.parse(localStorage.getItem("bsky-followers")).filter(element => !followers.some(item => item.did === element.did))
+                                if(unfollowers.length != JSON.parse(localStorage.getItem("bsky-followers")).length) {
+                                    if(unfollowers.length > 1) {
+                                        localStorage.setItem("bsky-unfollows", JSON.stringify(unfollowers));
+                                    } else localStorage.removeItem('bsky-unfollows');
+                                }
+                                let oldFollowersArray = JSON.parse(localStorage.getItem("bsky-followers"));
+                                let unfollowed = compareJsonArrays(oldFollowersArray, followers)
+                                if(unfollowed.length > 0 || (localStorage.getItem("bsky-unfollows") && JSON.parse(localStorage.getItem("bsky-unfollows")).length > 0)) {
+                                    if(!localStorage.getItem("bsky-unfollows")) {
+                                        localStorage.setItem("bsky-unfollows", JSON.stringify(unfollowed.map(unfollower => ({ did: unfollower.did, handle: unfollower.handle, displayName: unfollower.displayName, avatar: unfollower.avatar, unfollowedAt: Date.now() }))))
+                                    } else {
+                                        let currentUnfollows = removeDuplicates(JSON.parse(localStorage.getItem("bsky-unfollows")));
+                                        currentUnfollows.push(...unfollowed.map(unfollower => ({ did: unfollower.did, handle: unfollower.handle, displayName: unfollower.displayName, avatar: unfollower.avatar, unfollowedAt: Date.now() })))
+                                        localStorage.setItem("bsky-unfollows", JSON.stringify(removeDuplicates(currentUnfollows)))
                                     }
-                                    let oldFollowersArray = JSON.parse(localStorage.getItem("bsky-followers"));
-                                    let unfollowed = compareJsonArrays(oldFollowersArray, followers)
-                                    if(unfollowed.length > 0 || (localStorage.getItem("bsky-unfollows") && JSON.parse(localStorage.getItem("bsky-unfollows")).length > 0)) {
-                                        if(!localStorage.getItem("bsky-unfollows")) {
-                                            localStorage.setItem("bsky-unfollows", JSON.stringify(unfollowed.map(unfollower => ({ did: unfollower.did, handle: unfollower.handle, displayName: unfollower.displayName, avatar: unfollower.avatar, unfollowedAt: Date.now() }))))
-                                        } else {
-                                            let currentUnfollows = removeDuplicates(JSON.parse(localStorage.getItem("bsky-unfollows")));
-                                            currentUnfollows.push(...unfollowed.map(unfollower => ({ did: unfollower.did, handle: unfollower.handle, displayName: unfollower.displayName, avatar: unfollower.avatar, unfollowedAt: Date.now() })))
-                                            localStorage.setItem("bsky-unfollows", JSON.stringify(removeDuplicates(currentUnfollows)))
-                                        }
+                                    if(window.location.pathname === "/notifications") {
                                         let htmlArray = removeDuplicates(JSON.parse(localStorage.getItem("bsky-unfollows"))).map(unfollower => ({ displayName: unfollower.displayName, handle: unfollower.handle, html: generateHTML(unfollower.displayName, unfollower.handle, unfollower.avatar, unfollower.unfollowedAt), unfollowedAt: unfollower.unfollowedAt }))
                                         for(var i = 0; i < htmlArray.length; i++) {
                                             let unfollower = htmlArray[i];
@@ -267,12 +267,12 @@
                                             }
                                         }
                                     }
-                                } catch (e) {
-                                    console.log(e)
                                 }
-                                localStorage.setItem("bsky-followers", JSON.stringify(followers))
-                            }).catch(err => console.log(err));
-                        }
+                            } catch (e) {
+                                console.log(e)
+                            }
+                            localStorage.setItem("bsky-followers", JSON.stringify(followers))
+                        }).catch(err => console.log(err));
                     }, 7000)
                 }
             }
